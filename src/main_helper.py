@@ -19,6 +19,12 @@ sys.path.insert(0, str(project_root))
 from audio_helper import AudioHelperProcess
 from system_tray import SystemTrayApp
 
+try:
+    from dependency_validator import dependency_validator
+    DEPENDENCY_VALIDATION_AVAILABLE = True
+except ImportError:
+    DEPENDENCY_VALIDATION_AVAILABLE = False
+
 
 def setup_helper_environment():
     """Setup helper process environment"""
@@ -252,40 +258,73 @@ Examples:
 async def main_async():
     """Main async entry point for helper process"""
     logger = setup_helper_environment()
-    
+
     try:
         # Parse command line arguments
         command = sys.argv[1].lower() if len(sys.argv) > 1 else 'run'
-        
+
         if command in ['help', '--help', '-h']:
             show_usage()
             return
-            
+
         elif command == 'test':
             run_audio_test()
             return
-            
+
         elif command == 'debug':
             # Enable debug logging
             logging.getLogger().setLevel(logging.DEBUG)
             logger.info("Debug mode enabled")
             command = 'run'  # Continue with normal run
-            
-        # Check prerequisites
+
+        # Validate audio dependencies
+        if DEPENDENCY_VALIDATION_AVAILABLE:
+            logger.info("Validating audio dependencies...")
+
+            try:
+                audio_validation_ok, audio_results = dependency_validator.validate_for_audio_processing()
+
+                if not audio_validation_ok:
+                    logger.error("Audio dependency validation failed:")
+                    for issue in audio_results.get('issues', []):
+                        logger.error(f"  - {issue}")
+
+                    # Don't exit immediately - try basic audio check
+                    logger.warning("Falling back to basic audio prerequisite check")
+                else:
+                    logger.info("Audio dependency validation passed")
+                    devices_found = audio_results.get('audio_devices_found', 0)
+                    if devices_found > 0:
+                        logger.info(f"Found {devices_found} audio input devices")
+
+                # Record validation result
+                dependency_validator.record_validation_result(
+                    'audio_helper_startup',
+                    audio_validation_ok,
+                    audio_results
+                )
+
+            except Exception as e:
+                logger.error(f"Audio dependency validation error: {e}")
+                logger.warning("Proceeding with basic audio check")
+        else:
+            logger.warning("Dependency validation not available")
+
+        # Check prerequisites (basic or fallback)
         if not check_audio_prerequisites():
             logger.error("Audio prerequisites not met")
             sys.exit(1)
-            
+
         # Check service connection (warn but don't fail)
         if not check_service_connection():
             logger.warning("VoiceGuard service not running - some features may not work")
-            
+
         # Run based on command
         if command == 'headless':
             await run_helper_headless()
         else:  # 'run' or default
             await run_helper_with_tray()
-            
+
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
     except Exception as e:

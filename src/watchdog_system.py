@@ -16,6 +16,12 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
 import json
 
+try:
+    from dependency_validator import dependency_validator
+    DEPENDENCY_VALIDATION_AVAILABLE = True
+except ImportError:
+    DEPENDENCY_VALIDATION_AVAILABLE = False
+
 
 class WatchdogManager:
     """Multi-layer watchdog system for VoiceGuard reliability"""
@@ -29,6 +35,7 @@ class WatchdogManager:
         self.process_watchdog = ProcessWatchdog()
         self.system_watchdog = SystemWatchdog()
         self.health_monitor = HealthMonitor()
+        self.dependency_watchdog = DependencyWatchdog()
         
         # Recovery manager
         self.recovery_manager = RecoveryManager()
@@ -88,6 +95,9 @@ class WatchdogManager:
             
             # Application health check
             health_status['application'] = self.health_monitor.check_health()
+
+            # Dependency health check
+            health_status['dependencies'] = self.dependency_watchdog.check_health()
             
         except Exception as e:
             self.logger.error(f"Health check error: {e}")
@@ -464,6 +474,64 @@ class RecoveryManager:
             f.write(f"{datetime.now().isoformat()}: Emergency system restart initiated by watchdog\n")
             
         # Restart system
-        subprocess.run(['shutdown', '/r', '/t', '60', '/c', 
-                       'VoiceGuard emergency restart - persistent service failures'], 
+        subprocess.run(['shutdown', '/r', '/t', '60', '/c',
+                       'VoiceGuard emergency restart - persistent service failures'],
                       check=False)
+
+
+class DependencyWatchdog:
+    """Dependency health monitoring for watchdog system"""
+
+    def __init__(self):
+        self.logger = logging.getLogger("DependencyWatchdog")
+        self.last_dependency_check = None
+        self.dependency_check_interval = timedelta(hours=6)  # Check every 6 hours
+
+    def check_health(self) -> Dict:
+        """Check dependency health status"""
+        try:
+            current_time = datetime.now(timezone.utc)
+
+            # Skip if checked recently
+            if (self.last_dependency_check and
+                current_time - self.last_dependency_check < self.dependency_check_interval):
+                return {
+                    'healthy': True,
+                    'status': 'skipped_recent_check',
+                    'last_check': self.last_dependency_check.isoformat()
+                }
+
+            if not DEPENDENCY_VALIDATION_AVAILABLE:
+                return {
+                    'healthy': True,
+                    'status': 'validation_not_available',
+                    'warning': 'Dependency validation module not available'
+                }
+
+            # Run dependency validation
+            validation_ok, issues = dependency_validator.dependency_manager.validate_installation()
+
+            # Update last check time
+            self.last_dependency_check = current_time
+
+            if validation_ok:
+                return {
+                    'healthy': True,
+                    'status': 'validated',
+                    'last_check': current_time.isoformat()
+                }
+            else:
+                return {
+                    'healthy': False,
+                    'status': 'validation_failed',
+                    'issues': issues,
+                    'last_check': current_time.isoformat()
+                }
+
+        except Exception as e:
+            self.logger.error(f"Dependency health check error: {e}")
+            return {
+                'healthy': False,
+                'status': 'check_error',
+                'error': str(e)
+            }

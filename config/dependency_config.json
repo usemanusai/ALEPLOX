@@ -1,0 +1,225 @@
+{
+  "dependency_management": {
+    "version": "1.0.0",
+    "last_updated": "2025-07-20",
+    "settings": {
+      "auto_update_enabled": false,
+      "update_check_interval_hours": 24,
+      "backup_retention_days": 30,
+      "warning_retention_days": 7,
+      "emergency_fallback_enabled": true,
+      "validation_cache_timeout_minutes": 60
+    },
+    "compatibility_matrix": {
+      "python_versions": {
+        "minimum": "3.8.0",
+        "maximum": "3.12.99",
+        "recommended": "3.11.0",
+        "tested_versions": ["3.8.10", "3.9.18", "3.10.12", "3.11.9", "3.12.4"]
+      },
+      "windows_versions": {
+        "minimum": "10.0.19041",
+        "supported": ["10", "11"],
+        "tested_builds": ["19041", "19042", "19043", "19044", "22000", "22621", "22631"]
+      },
+      "critical_packages": [
+        "pywin32",
+        "pyqt6", 
+        "numpy",
+        "scipy",
+        "pyaudio",
+        "aiohttp",
+        "cryptography",
+        "psutil",
+        "pillow",
+        "requests",
+        "packaging"
+      ],
+      "windows_specific": [
+        "pywin32",
+        "pywin32-ctypes",
+        "wmi",
+        "pystray"
+      ],
+      "audio_packages": [
+        "pyaudio",
+        "numpy",
+        "scipy",
+        "librosa",
+        "webrtcvad",
+        "speechrecognition"
+      ],
+      "gui_packages": [
+        "pyqt6",
+        "pillow"
+      ],
+      "incompatible_combinations": [
+        {
+          "description": "PyQt6 6.6+ requires pywin32 306+",
+          "packages": {
+            "pyqt6": ">=6.6.0",
+            "pywin32": "<306"
+          }
+        },
+        {
+          "description": "NumPy 2.0+ requires SciPy 1.13+",
+          "packages": {
+            "numpy": ">=2.0.0",
+            "scipy": "<1.13.0"
+          }
+        },
+        {
+          "description": "Librosa 0.10+ requires NumPy 1.20+",
+          "packages": {
+            "librosa": ">=0.10.0",
+            "numpy": "<1.20.0"
+          }
+        },
+        {
+          "description": "PyAudio compatibility with Python 3.12",
+          "packages": {
+            "pyaudio": "<0.2.14",
+            "python": ">=3.12.0"
+          }
+        }
+      ]
+    },
+    "known_good_versions": {
+      "last_verified": "2025-07-20",
+      "packages": {
+        "numpy": "1.26.4",
+        "scipy": "1.13.1",
+        "pyaudio": "0.2.14",
+        "librosa": "0.10.2",
+        "webrtcvad": "2.0.10",
+        "speechrecognition": "3.10.4",
+        "aiohttp": "3.9.5",
+        "pyqt6": "6.7.1",
+        "pywin32": "306",
+        "psutil": "5.9.8",
+        "pillow": "10.4.0",
+        "cryptography": "42.0.8",
+        "pyyaml": "6.0.1",
+        "requests": "2.32.3",
+        "packaging": "24.1",
+        "pytest": "8.2.2",
+        "black": "24.4.2",
+        "flake8": "7.1.0",
+        "mypy": "1.10.1"
+      }
+    },
+    "update_policies": {
+      "critical_packages": {
+        "policy": "manual_approval",
+        "description": "Critical packages require manual approval before updating"
+      },
+      "security_updates": {
+        "policy": "auto_update",
+        "description": "Security updates are automatically applied"
+      },
+      "minor_updates": {
+        "policy": "notify_only",
+        "description": "Minor updates generate notifications but require manual action"
+      },
+      "major_updates": {
+        "policy": "manual_approval",
+        "description": "Major version updates require manual approval and testing"
+      }
+    },
+    "validation_rules": {
+      "service_startup": {
+        "required_packages": ["pywin32", "psutil", "aiohttp"],
+        "optional_packages": ["cryptography"],
+        "validation_timeout_seconds": 30
+      },
+      "audio_processing": {
+        "required_packages": ["pyaudio", "numpy", "scipy"],
+        "optional_packages": ["librosa", "webrtcvad"],
+        "validation_timeout_seconds": 15,
+        "require_audio_devices": true
+      },
+      "gui_startup": {
+        "required_packages": ["pyqt6", "pillow"],
+        "optional_packages": [],
+        "validation_timeout_seconds": 10
+      },
+      "installation": {
+        "pre_check_required": true,
+        "backup_required": true,
+        "system_compatibility_check": true,
+        "package_conflict_check": true
+      }
+    },
+    "warning_filters": {
+      "suppress_categories": [
+        "DeprecationWarning:pkg_resources",
+        "PendingDeprecationWarning",
+        "FutureWarning:numpy.distutils"
+      ],
+      "log_only_categories": [
+        "DeprecationWarning",
+        "UserWarning:matplotlib"
+      ],
+      "emergency_suppress_all": false
+    },
+    "fallback_configuration": {
+      "enabled": true,
+      "trigger_conditions": [
+        "network_unavailable",
+        "pypi_unreachable", 
+        "validation_timeout",
+        "critical_import_failure"
+      ],
+      "fallback_actions": [
+        "use_cached_versions",
+        "suppress_warnings",
+        "enable_emergency_mode"
+      ]
+    },
+    "monitoring": {
+      "health_check_interval_minutes": 30,
+      "dependency_scan_interval_hours": 6,
+      "warning_collection_enabled": true,
+      "performance_monitoring_enabled": true,
+      "alert_thresholds": {
+        "warnings_per_hour": 50,
+        "failed_imports_per_hour": 5,
+        "validation_failures_per_day": 3
+      }
+    },
+    "cache_settings": {
+      "pypi_cache_ttl_hours": 6,
+      "validation_cache_ttl_minutes": 60,
+      "known_good_versions_ttl_days": 7,
+      "max_cache_size_mb": 100,
+      "cleanup_interval_hours": 24
+    },
+    "integration_points": {
+      "install_script": {
+        "pre_installation_check": true,
+        "auto_update_requirements": false,
+        "backup_on_update": true
+      },
+      "service_startup": {
+        "dependency_validation": true,
+        "emergency_fallback": true,
+        "validation_timeout_seconds": 30
+      },
+      "gui_startup": {
+        "dependency_validation": true,
+        "gui_specific_checks": true,
+        "validation_timeout_seconds": 10
+      },
+      "audio_helper": {
+        "dependency_validation": true,
+        "audio_device_check": true,
+        "validation_timeout_seconds": 15
+      },
+      "watchdog_system": {
+        "dependency_monitoring": true,
+        "check_interval_hours": 6,
+        "alert_on_issues": true
+      }
+    }
+  }
+}

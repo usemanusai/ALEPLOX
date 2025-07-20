@@ -17,15 +17,21 @@ try:
     from PyQt6.QtWidgets import QApplication, QMessageBox
     from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QIcon
-    
+
     # Import VoiceGuard GUI
     from config_gui import VoiceGuardConfigGUI
     PYQT_AVAILABLE = True
-    
+
 except ImportError as e:
     PYQT_AVAILABLE = False
     print(f"PyQt6 not available: {e}")
     print("Please install PyQt6: pip install PyQt6")
+
+try:
+    from dependency_validator import dependency_validator
+    DEPENDENCY_VALIDATION_AVAILABLE = True
+except ImportError:
+    DEPENDENCY_VALIDATION_AVAILABLE = False
 
 
 def setup_gui_environment():
@@ -161,16 +167,51 @@ def main():
         else:
             logger.info("VoiceGuard service is running")
             
+        # Validate GUI dependencies
+        if DEPENDENCY_VALIDATION_AVAILABLE:
+            logger.info("Validating GUI dependencies...")
+
+            try:
+                gui_validation_ok, gui_results = dependency_validator.validate_for_gui_startup()
+
+                if not gui_validation_ok:
+                    logger.error("GUI dependency validation failed:")
+                    for issue in gui_results.get('issues', []):
+                        logger.error(f"  - {issue}")
+
+                    show_error_dialog(
+                        "GUI Dependencies Missing",
+                        f"GUI dependency validation failed:\n\n" +
+                        "\n".join(gui_results.get('issues', [])) +
+                        "\n\nPlease install missing dependencies and try again."
+                    )
+                    sys.exit(1)
+                else:
+                    logger.info("GUI dependency validation passed")
+
+                # Record validation result
+                dependency_validator.record_validation_result(
+                    'config_gui_startup',
+                    gui_validation_ok,
+                    gui_results
+                )
+
+            except Exception as e:
+                logger.error(f"GUI dependency validation error: {e}")
+                logger.warning("Proceeding without GUI dependency validation")
+        else:
+            logger.warning("Dependency validation not available")
+
         # Create and show main window
         try:
             main_window = VoiceGuardConfigGUI()
-            
+
             if main_window is None:
                 raise Exception("Failed to create main window")
-                
+
             main_window.show()
             logger.info("Configuration GUI started successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to create main window: {e}")
             show_error_dialog(

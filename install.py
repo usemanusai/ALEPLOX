@@ -17,6 +17,16 @@ import win32security
 import ntsecuritycon
 import logging
 
+# Add src to path for dependency management
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+try:
+    from dependency_validator import dependency_validator
+    DEPENDENCY_VALIDATION_AVAILABLE = True
+except ImportError:
+    DEPENDENCY_VALIDATION_AVAILABLE = False
+    print("Warning: Dependency validation not available")
+
 
 class VoiceGuardInstaller:
     """VoiceGuard installation and setup manager"""
@@ -95,32 +105,86 @@ class VoiceGuardInstaller:
             return False
             
     def check_prerequisites(self):
-        """Check system prerequisites"""
+        """Check system prerequisites with dependency validation"""
         print("Checking prerequisites...")
-        
+
+        # Run dependency validation if available
+        if DEPENDENCY_VALIDATION_AVAILABLE:
+            print("Running comprehensive dependency validation...")
+
+            try:
+                requirements_files = [
+                    self.project_root / "requirements.txt",
+                    self.project_root / "requirements-dev.txt"
+                ]
+
+                # Filter to existing files
+                existing_files = [f for f in requirements_files if f.exists()]
+
+                if existing_files:
+                    success, results = dependency_validator.validate_for_installation(existing_files)
+
+                    if not success:
+                        print("❌ Dependency validation failed:")
+                        for issue in results.get('system_issues', []):
+                            print(f"  - System: {issue}")
+                        for issue in results.get('incompatibilities', []):
+                            print(f"  - Compatibility: {issue}")
+                        return False
+
+                    # Show recommendations
+                    if results.get('recommendations'):
+                        print("📋 Dependency recommendations:")
+                        for rec in results['recommendations']:
+                            print(f"  - {rec}")
+
+                    # Show update information
+                    if results.get('package_updates'):
+                        update_count = len(results['package_updates'])
+                        print(f"ℹ️ {update_count} package updates available")
+
+                        if results.get('auto_updated'):
+                            print("✅ Requirements files automatically updated")
+                            backup_path = results.get('backup_path')
+                            if backup_path:
+                                print(f"📁 Backup created at: {backup_path}")
+
+                    print("✅ Dependency validation passed")
+                else:
+                    print("⚠️ No requirements files found, using basic validation")
+
+            except Exception as e:
+                print(f"⚠️ Dependency validation error: {e}")
+                print("Falling back to basic prerequisite check...")
+
+        # Basic prerequisite check (fallback)
+        return self._basic_prerequisite_check()
+
+    def _basic_prerequisite_check(self):
+        """Basic prerequisite check (fallback method)"""
         # Check Windows version
         import platform
         if not platform.system() == "Windows":
             print("❌ VoiceGuard requires Windows")
             return False
-            
+
         # Check Python version
-        if sys.version_info < (3, 11):
-            print(f"❌ Python 3.11 or higher required (found {sys.version_info.major}.{sys.version_info.minor})")
+        if sys.version_info < (3, 8):
+            print(f"❌ Python 3.8 or higher required (found {sys.version_info.major}.{sys.version_info.minor})")
             return False
-            
+
         # Check required packages
         required_packages = [
             'pyaudio', 'numpy', 'scipy', 'aiohttp', 'pywin32', 'PyQt6'
         ]
-        
+
         missing_packages = []
         for package in required_packages:
             try:
                 __import__(package)
             except ImportError:
                 missing_packages.append(package)
-                
+
         if missing_packages:
             print(f"Installing missing packages: {', '.join(missing_packages)}")
             try:
@@ -131,8 +195,8 @@ class VoiceGuardInstaller:
             except subprocess.CalledProcessError as e:
                 print(f"❌ Failed to install packages: {e}")
                 return False
-                
-        print("✅ Prerequisites check passed")
+
+        print("✅ Basic prerequisites check passed")
         return True
         
     def create_directories(self):

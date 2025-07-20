@@ -20,6 +20,12 @@ from voiceguard_service import VoiceGuardService
 from config_manager import ConfigurationManager
 from event_logger import EventLogger
 
+try:
+    from dependency_validator import dependency_validator
+    DEPENDENCY_VALIDATION_AVAILABLE = True
+except ImportError:
+    DEPENDENCY_VALIDATION_AVAILABLE = False
+
 
 def setup_service_environment():
     """Setup service environment and logging"""
@@ -176,19 +182,60 @@ def run_console_mode():
     """Run service in console mode for debugging"""
     logger = logging.getLogger("ConsoleMode")
     logger.info("Starting VoiceGuard in console mode...")
-    
+
+    # Validate dependencies before starting service
+    if DEPENDENCY_VALIDATION_AVAILABLE:
+        logger.info("Validating dependencies for service startup...")
+
+        try:
+            import asyncio
+
+            # Run dependency validation
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            validation_ok, validation_results = loop.run_until_complete(
+                dependency_validator.validate_for_service_startup()
+            )
+
+            if not validation_ok:
+                logger.error("Dependency validation failed")
+                if validation_results.get('fallback_enabled'):
+                    logger.warning("Service starting in emergency fallback mode")
+                else:
+                    logger.error("Cannot start service - critical dependency issues")
+                    sys.exit(1)
+
+            elif validation_results.get('status') == 'fallback_mode':
+                logger.warning("Service starting in emergency fallback mode due to dependency issues")
+
+            # Record validation result
+            dependency_validator.record_validation_result(
+                'service_startup',
+                validation_ok,
+                validation_results
+            )
+
+            loop.close()
+
+        except Exception as e:
+            logger.error(f"Dependency validation error: {e}")
+            logger.warning("Proceeding without dependency validation")
+    else:
+        logger.warning("Dependency validation not available")
+
     # Create service instance
     service = VoiceGuardService([])
-    
+
     # Setup signal handlers for graceful shutdown
     def signal_handler(signum, frame):
         logger.info(f"Received signal {signum}, shutting down...")
         service.SvcStop()
         sys.exit(0)
-        
+
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
+
     # Run service
     try:
         service.SvcDoRun()
