@@ -32,6 +32,14 @@ VoiceGuard is a robust Windows 11 background service that provides immediate sys
 - **Usage Analytics**: API key rotation optimization and cost tracking
 - **Comprehensive Logging**: Structured logging with filtering and export
 
+### Dependency Management System
+- **Automated Compatibility Checking**: Prevents deprecated package warnings and compatibility issues
+- **Pre-Installation Validation**: Comprehensive dependency checking before installation
+- **Version Compatibility Matrix**: Validates Python/Windows versions and package combinations
+- **Emergency Fallback Mode**: Graceful degradation when dependency issues occur
+- **Warning Suppression**: Prevents deprecation warnings from terminating the service
+- **Automatic Updates**: Smart dependency updates with backup and rollback capability
+
 ## 📋 System Requirements
 
 ### Operating System
@@ -196,6 +204,44 @@ python install.py
 3. **Disable Test Mode**:
    - Test mode auto-expires after 30 minutes
    - Or manually disable via system tray/GUI
+
+### Dependency Management CLI
+
+VoiceGuard includes a comprehensive dependency management system to prevent compatibility issues:
+
+1. **Check Dependency Status**:
+   ```bash
+   python src/dependency_cli.py check
+   ```
+
+2. **Update Dependencies**:
+   ```bash
+   python src/dependency_cli.py update
+   ```
+
+3. **Validate Component Dependencies**:
+   ```bash
+   python src/dependency_cli.py validate service  # Service dependencies
+   python src/dependency_cli.py validate gui      # GUI dependencies
+   python src/dependency_cli.py validate audio    # Audio dependencies
+   ```
+
+4. **Backup and Restore**:
+   ```bash
+   python src/dependency_cli.py backup                    # Create backup
+   python src/dependency_cli.py restore /path/to/backup   # Restore from backup
+   ```
+
+5. **Cleanup Old Data**:
+   ```bash
+   python src/dependency_cli.py cleanup --days 30
+   ```
+
+The dependency system automatically:
+- Validates package compatibility before installation
+- Prevents deprecated package warnings from stopping the service
+- Creates backups before making changes
+- Provides emergency fallback mode for critical operations
 
 ### Emergency Situations
 
