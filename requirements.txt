@@ -1,0 +1,59 @@
+# VoiceGuard Emergency Shutdown Service - Dependencies
+
+# Core Python packages
+numpy>=1.24.0
+scipy>=1.10.0
+asyncio-mqtt>=0.13.0
+
+# Audio processing
+pyaudio>=0.2.11
+librosa>=0.10.0
+webrtcvad>=2.0.10
+sounddevice>=0.4.6
+
+# Speech recognition
+SpeechRecognition>=3.10.0
+pocketsphinx>=5.0.0
+
+# HTTP client for API calls
+aiohttp>=3.8.0
+requests>=2.31.0
+
+# GUI framework
+PyQt6>=6.5.0
+PyQt6-tools>=6.5.0
+
+# Windows integration
+pywin32>=306
+pywin32-ctypes>=0.2.2
+wmi>=1.5.1
+
+# System monitoring
+psutil>=5.9.0
+
+# Image processing for system tray icons
+Pillow>=10.0.0
+
+# Database
+sqlite3  # Built into Python
+
+# Cryptography for secure storage
+cryptography>=41.0.0
+
+# Configuration and data formats
+pyyaml>=6.0
+toml>=0.10.2
+
+# Logging and monitoring
+colorlog>=6.7.0
+
+# Development and testing (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Optional: For advanced audio features
+# tensorflow>=2.13.0  # For advanced AI models (large dependency)
+# torch>=2.0.0        # Alternative AI framework (large dependency)
