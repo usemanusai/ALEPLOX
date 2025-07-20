@@ -1,0 +1,53 @@
+# VoiceGuard Development Dependencies
+# Includes all production dependencies plus development tools
+
+# Include production requirements
+-r requirements.txt
+
+# Development and testing tools
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+
+# Code quality and formatting
+black>=23.0.0
+flake8>=6.0.0
+isort>=5.12.0
+mypy>=1.5.0
+
+# Type checking stubs
+types-requests>=2.31.0
+types-PyYAML>=6.0.0
+
+# Documentation
+sphinx>=7.1.0
+sphinx-rtd-theme>=1.3.0
+
+# Build tools
+build>=0.10.0
+wheel>=0.41.0
+setuptools>=68.0.0
+
+# Security scanning
+bandit>=1.7.5
+safety>=2.3.0
+
+# Performance profiling
+memory-profiler>=0.61.0
+line-profiler>=4.1.0
+
+# Debugging
+pdb++>=0.10.3
+ipython>=8.14.0
+
+# Testing utilities
+factory-boy>=3.3.0
+freezegun>=1.2.2
+responses>=0.23.0
+
+# Audio testing (optional)
+# soundfile>=0.12.1  # For audio file I/O in tests
+
+# Windows-specific development tools
+# pywin32-stubs>=306  # Type stubs for pywin32 (if available)
